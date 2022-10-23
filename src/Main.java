@@ -33,7 +33,7 @@ class Ast {
     private Num x;
     private Num y;
     private Op op;
-    private List<String> errors = new ArrayList<String>();
+    private final List<String> errors = new ArrayList<>();
 
     public Ast(String input) {
         parse(input);
@@ -91,24 +91,12 @@ class Ast {
     }
 
     public Num eval() throws Exception {
-        Num result;
-
-        switch (op) {
-            case ADD:
-                result = x.add(y);
-                break;
-            case SUB:
-                result = x.sub(y);
-                break;
-            case MUL:
-                result = x.mul(y);
-                break;
-            case DIV:
-                result = x.div(y);
-                break;
-            default:
-                throw new Exception("Operation is not defined");
-        }
+        Num result = switch (op) {
+            case ADD -> x.add(y);
+            case SUB -> x.sub(y);
+            case MUL -> x.mul(y);
+            case DIV -> x.div(y);
+        };
 
         if (result.getType() == NumType.ROMAN && result.getValue() < 1)
             throw new Exception("Roman numerals must be >= 1");
@@ -124,28 +112,23 @@ enum Op {
     DIV;
 
     public static Op parse(String input) throws IllegalArgumentException {
-        switch (input) {
-            case "+":
-                return Op.ADD;
-            case "-":
-                return Op.SUB;
-            case "*":
-                return Op.MUL;
-            case "/":
-                return Op.DIV;
-            default:
-                throw new IllegalArgumentException("Operation is not supported");
-        }
+        return switch (input) {
+            case "+" -> Op.ADD;
+            case "-" -> Op.SUB;
+            case "*" -> Op.MUL;
+            case "/" -> Op.DIV;
+            default -> throw new IllegalArgumentException("Operation is not supported");
+        };
     }
 }
 
 class Num {
-    private int value;
-    private NumType type;
-    public static String[] basicRoman = {
+    private final int value;
+    private final NumType type;
+    public static final String[] basicRoman = {
             "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"
     };
-    public static String[] basicArabic = {
+    public static final String[] basicArabic = {
             "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
     };
 
@@ -164,25 +147,22 @@ class Num {
 
     public static Num parse(String input) throws IllegalArgumentException {
         for (int i = 0; i <= 10; i++) {
-            if (basicArabic[i].equals(input)) return new Num(i, NumType.ARABIK);
+            if (basicArabic[i].equals(input)) return new Num(i, NumType.ARABIC);
             else if (basicRoman[i].equals(input)) return new Num(i, NumType.ROMAN);
         }
         throw new IllegalArgumentException();
     }
 
     public String toString() {
-        switch (type) {
-            case ARABIK:
-                return String.valueOf(value);
-            case ROMAN:
-                return toRoman();
-        }
+        return switch (type) {
+            case ARABIC -> String.valueOf(value);
+            case ROMAN -> toRoman();
+        };
 
-        return null;
     }
 
     private String toRoman() {
-        StringBuffer buf = new StringBuffer("");
+        StringBuilder buf = new StringBuilder();
 
         // whole 100
         int c1 = value / 100;
@@ -256,13 +236,13 @@ class Num {
     private static String X(int in) {
         if (in == 4) return "XL";
         else if ((in != 0) && (in < 4)) {
-            StringBuffer a = new StringBuffer("");
+            StringBuilder ARABIC = new StringBuilder();
             int i = 0;
             while (i < in) {
-                a.append("X");
+                ARABIC.append("X");
                 i++;
             }
-            return a.toString();
+            return ARABIC.toString();
         } else return "";
     }
 
@@ -273,6 +253,6 @@ class Num {
 }
 
 enum NumType {
-    ARABIK,
+    ARABIC,
     ROMAN
 }

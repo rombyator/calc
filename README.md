@@ -1,5 +1,5 @@
-# Arabik & Roman calculator
+# Arabic & Roman calculator
 
-* Can add, subtract, multiply, divide arabik & roman numbers (up to 10)
+* Can add, subtract, multiply, divide arabic & roman numbers (up to 10)
 * Works only with whole numbers
 
