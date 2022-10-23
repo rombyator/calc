@@ -234,6 +234,7 @@ class Num {
 
     // roman 100
     private static String C(int in) {
+        // Enough for our requirements (result can not be greater than 100)
         if (in > 0) {
             return "C";
         }
