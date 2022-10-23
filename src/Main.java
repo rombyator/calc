@@ -1,5 +1,4 @@
 import java.util.*;
-import java.io.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -8,11 +7,8 @@ public class Main {
         while (true) {
             System.out.print("Enter equation (or q to exit): ");
             final String eq = in.nextLine();
-            if (eq.trim().toLowerCase() == "q") {
-                break;
-            } else {
-                System.out.print("Result: " + calc(eq));
-            }
+            if (eq.trim().equalsIgnoreCase("q")) break;
+            System.out.print("Result: " + calc(eq));
             System.out.println();
             System.out.println();
         }
