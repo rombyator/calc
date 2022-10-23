@@ -1,8 +1,13 @@
 import java.util.*;
+import java.io.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        System.out.println(calc("VII - VII"));
+        Scanner in = new Scanner(System.in);
+        System.out.print("Enter equation: ");
+        final String eq = in.nextLine();
+        System.out.print("Result: " + calc(eq));
+        in.close();
     }
 
     public static String calc(String input) throws Exception {
@@ -42,7 +47,10 @@ class Ast {
             return;
         }
 
-        final String[] xy = input.trim().toUpperCase().split(" ");
+        final String[] xy = input
+                .trim()
+                .toUpperCase()
+                .split(" ");
 
         // check equation size
         if (xy.length != 3) {
@@ -72,7 +80,8 @@ class Ast {
         }
 
         // check if operands have same type
-        if (x.getType() != y.getType()) errors.add("Can not operate on numbers of different types");
+        if (x.getType() != y.getType())
+            errors.add("Can not operate on numbers of different types");
     }
 
     public Num eval() throws Exception {
@@ -95,7 +104,8 @@ class Ast {
                 throw new Exception("Operation is not defined");
         }
 
-        if (result.getType() == NumType.ROMAN && result.getValue() < 1) throw new Exception("Roman numerals must be >= 1");
+        if (result.getType() == NumType.ROMAN && result.getValue() < 1)
+            throw new Exception("Roman numerals must be >= 1");
 
         return result;
     }
@@ -147,7 +157,7 @@ class Num {
     }
 
     public static Num parse(String input) throws IllegalArgumentException {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i <= 10; i++) {
             if (basicArabic[i].equals(input)) return new Num(i, NumType.ARABIK);
             else if (basicRoman[i].equals(input)) return new Num(i, NumType.ROMAN);
         }
@@ -170,8 +180,7 @@ class Num {
 
         // whole 100
         int c1 = value / 100;
-        if (c1 > 0)
-            buf.append(C(c1));
+        if (c1 > 0) buf.append(C(c1));
         // remainder of 100
         int c2 = value % 100;
 
@@ -193,25 +202,25 @@ class Num {
         return buf.toString();
     }
 
-    public Num add(Num other) throws Exception {
+    public Num add(Num other) {
         final int value = this.value + other.getValue();
 
         return new Num(value, this.type);
     }
 
-    public Num sub(Num other) throws Exception {
+    public Num sub(Num other) {
         final int value = this.value - other.getValue();
 
         return new Num(value, this.type);
     }
 
-    public Num mul(Num other) throws Exception {
+    public Num mul(Num other) {
         final int value = this.value * other.getValue();
 
         return new Num(value, this.type);
     }
 
-    public Num div(Num other) throws Exception {
+    public Num div(Num other) {
         final int value = this.value / other.getValue();
 
         return new Num(value, this.type);
@@ -247,8 +256,7 @@ class Num {
                 i++;
             }
             return a.toString();
-        }
-        else return "";
+        } else return "";
     }
 
     // roman 1 - 9
