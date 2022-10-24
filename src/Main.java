@@ -17,12 +17,7 @@ public class Main {
     }
 
     public static String calc(String input) throws Exception {
-        final Ast ast = new Ast(input);
-
-        if (ast.hasErrors()) {
-            throw new Exception(String.join(" :: ", ast.getErrors()));
-        }
-
+        final Ast ast = Ast.parse(input);
         final Num result = ast.eval();
 
         return result.toString();
@@ -30,28 +25,23 @@ public class Main {
 }
 
 class Ast {
-    private Num x;
-    private Num y;
-    private Op op;
-    private final List<String> errors = new ArrayList<>();
+    private final Num x;
+    private final Num y;
+    private final Op op;
 
-    public Ast(String input) {
-        parse(input);
+    private Ast(Num x, Num y, Op op) {
+        this.x = x;
+        this.y = y;
+        this.op = op;
     }
 
-    public boolean hasErrors() {
-        return errors.size() > 0;
-    }
+    public static Ast parse(String input) throws Exception {
+        Num x;
+        Num y;
+        Op op;
 
-    public List<String> getErrors() {
-        return errors;
-    }
-
-    private void parse(String input) {
-        if (input == null) {
-            errors.add("Equation is not provided");
-            return;
-        }
+        if (input == null)
+            throw new Exception("Equation is not provided");
 
         final String[] xy = input
                 .trim()
@@ -59,35 +49,35 @@ class Ast {
                 .split(" ");
 
         // check equation size
-        if (xy.length != 3) {
-            errors.add("Equation has incorrect format");
-            return;
-        }
+        if (xy.length != 3)
+            throw new Exception("Equation has incorrect format");
 
         // parse first operand
         try {
             x = Num.parse(xy[0]);
         } catch (IllegalArgumentException e) {
-            errors.add("First operand is not valid arabic or roman number");
+            throw new Exception("First operand is not valid arabic or roman number");
         }
 
         // parse operation
         try {
             op = Op.parse(xy[1]);
         } catch (IllegalArgumentException e) {
-            errors.add("Operation is not supported");
+            throw new Exception("Operation is not supported");
         }
 
         // parse second operand
         try {
             y = Num.parse(xy[2]);
         } catch (IllegalArgumentException e) {
-            errors.add("Second operand is not valid arabic or roman number");
+            throw new Exception("Second operand is not valid arabic or roman number");
         }
 
         // check if operands have same type
         if (x.getType() != y.getType())
-            errors.add("Can not operate on numbers of different types");
+            throw new Exception("Can not operate on numbers of different types");
+
+        return new Ast(x, y, op);
     }
 
     public Num eval() throws Exception {
@@ -111,7 +101,7 @@ enum Op {
     MUL,
     DIV;
 
-    public static Op parse(String input) throws IllegalArgumentException {
+    public static Op parse(String input) {
         return switch (input) {
             case "+" -> Op.ADD;
             case "-" -> Op.SUB;
@@ -125,12 +115,6 @@ enum Op {
 class Num {
     private final int value;
     private final NumType type;
-    public static final String[] basicRoman = {
-            "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"
-    };
-    public static final String[] basicArabic = {
-            "", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
-    };
 
     private Num(int value, NumType type) {
         this.value = value;
@@ -145,12 +129,28 @@ class Num {
         return type;
     }
 
-    public static Num parse(String input) throws IllegalArgumentException {
-        for (int i = 0; i <= 10; i++) {
-            if (basicArabic[i].equals(input)) return new Num(i, NumType.ARABIC);
-            else if (basicRoman[i].equals(input)) return new Num(i, NumType.ROMAN);
+    public static Num parse(String input) {
+        try {
+            final int value = Integer.parseInt(input);
+            if (isValidValue(value))
+                return new Num(value, NumType.ARABIC);
+        } catch (NumberFormatException e) {
+            if (isValidRoman(input)) {
+                final int value = romanToInt(input);
+                if (isValidValue(value))
+                    return new Num(value, NumType.ROMAN);
+            }
         }
-        throw new IllegalArgumentException();
+
+        throw new IllegalArgumentException("Argument is not valid Roman or Arabic number");
+    }
+
+    private static boolean isValidValue(int value) {
+        return value <= 10;
+    }
+
+    private static boolean isValidRoman(String romanStr) {
+        return romanStr.matches("(X|IX|IV|V?I{0,3})");
     }
 
     public String toString() {
@@ -161,31 +161,46 @@ class Num {
 
     }
 
+    private static int romanToInt(String rs) {
+        int result = 0;
+
+        Map<Character, Integer> values = new HashMap<>();
+        values.put('I', 1);
+        values.put('V', 5);
+        values.put('X', 10);
+        values.put('L', 50);
+        values.put('C', 100);
+
+        for (int i = 0; i < rs.length() - 1; i++) {
+            int n = values.get(rs.charAt(i));
+            int m = values.get(rs.charAt(i + 1));
+            if (i + 1 == rs.length() || n >= m) {
+                result += n;
+            } else {
+                result -= n;
+            }
+        }
+
+        int lastCharValue = values.get(rs.charAt(rs.length() - 1));
+        result += lastCharValue;
+
+        return result;
+    }
+
     private String toRoman() {
-        StringBuilder buf = new StringBuilder();
+        StringBuilder result = new StringBuilder();
+        int number = this.value;
+        int[] numbers = {100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] romans = {"C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
 
-        // whole 100
-        int c1 = value / 100;
-        if (c1 > 0) buf.append(C(c1));
-        // remainder of 100
-        int c2 = value % 100;
+        for (int i = 0; i < numbers.length; i++) {
+            while (number >= numbers[i]) {
+                number -= numbers[i];
+                result.append(romans[i]);
+            }
+        }
 
-        // whole 50
-        int l1 = c2 / 50;
-        buf.append(L(l1));
-        // remainder of 50
-        int l2 = c2 % 50;
-
-        // whole 10
-        int x1 = l2 / 10;
-        buf.append(X(x1));
-        // remainder of 10
-        int x2 = l2 % 10;
-
-        // remainder 1 - 9
-        buf.append(oneToNine(x2));
-
-        return buf.toString();
+        return result.toString();
     }
 
     public Num add(Num other) {
@@ -210,45 +225,6 @@ class Num {
         final int value = this.value / other.getValue();
 
         return new Num(value, this.type);
-    }
-
-    // roman 100
-    private static String C(int in) {
-        // Enough for our requirements (result can not be greater than 100)
-        if (in > 0) {
-            return "C";
-        }
-
-        return "";
-    }
-
-    // roman 50
-    private static String L(int in) {
-        if (in == 4) return "XC";
-        if (in > 0) {
-            return "L";
-        }
-
-        return "";
-    }
-
-    // roman 10
-    private static String X(int in) {
-        if (in == 4) return "XL";
-        else if ((in != 0) && (in < 4)) {
-            StringBuilder ARABIC = new StringBuilder();
-            int i = 0;
-            while (i < in) {
-                ARABIC.append("X");
-                i++;
-            }
-            return ARABIC.toString();
-        } else return "";
-    }
-
-    // roman 1 - 9
-    private static String oneToNine(int in) {
-        return basicRoman[in];
     }
 }
 
